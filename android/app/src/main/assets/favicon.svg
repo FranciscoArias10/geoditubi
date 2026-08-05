@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <!-- Camera Icon -->
+  <path fill="#ffffff" filter="url(#shadow)" d="M160 128h-24c-13.3 0-24 10.7-24 24v16H80c-26.5 0-48 21.5-48 48v200c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V216c0-26.5-21.5-48-48-48h-32v-16c0-13.3-10.7-24-24-24h-24M256 240c44.2 0 80 35.8 80 80s-35.8 80-80 80-80-35.8-80-80 35.8-80 80-80z"/>
+  <!-- Location Pin Overlay -->
+  <path fill="#f43f5e" filter="url(#shadow)" d="M256 260c-22.1 0-40 17.9-40 40 0 32 40 72 40 72s40-40 40-72c0-22.1-17.9-40-40-40zm0 54c-7.7 0-14-6.3-14-14s6.3-14 14-14 14 6.3 14 14-6.3 14-14 14z"/>
+</svg>

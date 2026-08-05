@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GeoPhoto Edit - Ubicación, Fecha y Hora EXIF</title>
+    <meta name="description" content="Modifica la ubicación GPS, fecha y hora de tus fotos de forma invisible. Formato JPEG, mapa OpenStreetMap y ubicación predeterminada en CAC Milagro.">
+    
+    <!-- PWA & Mobile Web App Meta -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GeoPhoto">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Leaflet OSM CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-camera-rotate"></i>
+                </div>
+                <div>
+                    <h1>GeoPhoto Edit</h1>
+                    <p class="subtitle">Editor de Ubicación EXIF, Fecha y Hora</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button id="btnPWAInstall" class="btn btn-outline btn-sm hidden">
+                    <i class="fa-solid fa-download"></i> Instalar App
+                </button>
+                <div class="badge-status" id="presetBadge">
+                    <i class="fa-solid fa-location-dot"></i> CAC Milagro
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Layout -->
+        <main class="main-layout">
+            <!-- Left Column: Image Selection & Form Controls -->
+            <section class="panel panel-left">
+                <!-- Dropzone / Image Picker -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-image"></i> Fotografía</h2>
+                        <span class="badge" id="formatBadge">Sin cargar</span>
+                    </div>
+                    
+                    <div class="dropzone" id="dropzone">
+                        <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
+                        
+                        <div class="dropzone-content" id="dropzoneEmpty">
+                            <div class="upload-icon">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h3>Selecciona o arrastra una imagen</h3>
+                            <p>Soporta JPG, PNG, WEBP, HEIC. Se convertirá automáticamente a JPEG.</p>
+                            
+                            <div class="upload-buttons">
+                                <button type="button" class="btn btn-primary" id="btnSelectFile">
+                                    <i class="fa-solid fa-folder-open"></i> Galería / Archivo
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btnCamera">
+                                    <i class="fa-solid fa-camera"></i> Tomar Foto
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="preview-container hidden" id="previewContainer">
+                            <img id="imagePreview" alt="Vista previa de la imagen">
+                            <div class="preview-overlay">
+                                <button type="button" class="btn btn-icon btn-danger" id="btnRemoveImage" title="Quitar imagen">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                                <button type="button" class="btn btn-icon btn-secondary" id="btnChangeImage" title="Cambiar imagen">
+                                    <i class="fa-solid fa-arrows-rotate"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date & Time Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-calendar-days"></i> Fecha y Hora</h2>
+                        <div class="quick-presets">
+                            <button type="button" class="btn-chip" id="btnSetNow">
+                                <i class="fa-solid fa-bolt"></i> Ahora
+                            </button>
+                            <button type="button" class="btn-chip" id="btnRestoreDate" disabled>
+                                <i class="fa-solid fa-rotate-left"></i> Original
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="inputDate"><i class="fa-regular fa-calendar"></i> Fecha</label>
+                            <input type="date" id="inputDate" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inputTime"><i class="fa-regular fa-clock"></i> Hora</label>
+                            <input type="time" id="inputTime" step="1" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Renaming -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-signature"></i> Nombre del Archivo</h2>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-with-extension">
+                            <input type="text" id="inputFileName" class="form-control" placeholder="Ej: CAC_Milagro_Foto">
+                            <span class="extension-label">.jpg</span>
+                        </div>
+                        <small class="help-text">Puedes cambiar el nombre con el que se guardará la foto.</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Location Picker with OpenStreetMap -->
+            <section class="panel panel-right">
+                <div class="card card-full-height">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-map-location-dot"></i> Ubicación (GPS)</h2>
+                        <div class="location-preset-actions">
+                            <button type="button" class="btn btn-sm btn-primary" id="btnResetDefaultLoc">
+                                <i class="fa-solid fa-building-flag"></i> CAC Milagro
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline" id="btnCurrentGPS">
+                                <i class="fa-solid fa-crosshairs"></i> Mi GPS
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search Box -->
+                    <div class="search-box">
+                        <div class="search-input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="inputSearchAddress" class="form-control" placeholder="Buscar dirección o lugar en OpenStreetMap...">
+                            <button type="button" id="btnSearch" class="btn btn-icon-sm">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div class="search-results hidden" id="searchResults"></div>
+                    </div>
+
+                    <!-- OpenStreetMap Leaflet Container -->
+                    <div id="map" class="map-container"></div>
+
+                    <!-- Selected Location Info Box -->
+                    <div class="location-info-card">
+                        <div class="location-info-header">
+                            <span class="location-title" id="locationTitle">Centro de Atención Ciudadana del Cantón Milagro</span>
+                            <span class="badge badge-success">GPS Activo</span>
+                        </div>
+                        <p class="location-address" id="locationAddress">
+                            Avenida 17 de Septiembre y Avenida Colón Esquina, BLOQUE A PLANTA BAJA, Milagro, Guayas, Ecuador
+                        </p>
+                        <div class="location-coords">
+                            <span><i class="fa-solid fa-globe"></i> Lat: <strong id="lblLat">-2.140300</strong></span>
+                            <span>Lon: <strong id="lblLon">-79.596900</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Action Bar (Sticky for Mobile & Desktop) -->
+        <footer class="action-bar">
+            <div class="action-bar-info">
+                <div class="summary-item">
+                    <i class="fa-solid fa-file-image"></i>
+                    <span id="summaryFormat">Sin archivo</span>
+                </div>
+                <div class="summary-item">
+                    <i class="fa-solid fa-clock"></i>
+                    <span id="summaryDateTime">--/--/---- --:--</span>
+                </div>
+            </div>
+            
+            <div class="action-bar-buttons">
+                <button type="button" id="btnSaveImage" class="btn btn-success btn-lg" disabled>
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar Imagen con EXIF
+                </button>
+                <button type="button" id="btnShareImage" class="btn btn-share btn-lg hidden" disabled>
+                    <i class="fa-solid fa-share-nodes"></i> Compartir
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">
+        <i class="toast-icon fa-solid fa-circle-check"></i>
+        <span id="toastMessage">Operación realizada con éxito</span>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Piexifjs library for EXIF manipulation -->
+    <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.js"></script>
+
+    <!-- App Script -->
+    <script src="app.js"></script>
+</body>
+</html>

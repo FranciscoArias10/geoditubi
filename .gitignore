@@ -1,0 +1,10 @@
+# OS Generated
+.DS_Store
+Thumbs.db
+
+# Build output
+*.zip
+android/app/build/
+android/.gradle/
+android/.idea/
+android/local.properties
