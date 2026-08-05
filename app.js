@@ -501,16 +501,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const lonMin = Math.floor((absLon - lonDeg) * 60);
         const lonSec = Math.round(((absLon - lonDeg) * 60 - lonMin) * 60 * 100);
 
-        const zerothIfd = {};
-        zerothIfd[piexif.ImageIFD.Make] = "Android/Camera";
-        zerothIfd[piexif.ImageIFD.Model] = "Mobile Device";
-        zerothIfd[piexif.ImageIFD.DateTime] = exifDateStr;
-        zerothIfd[piexif.ImageIFD.Software] = "GeoPhoto Edit";
+        // Get image preview dimensions if available
+        const imgW = imagePreview.naturalWidth || 1920;
+        const imgH = imagePreview.naturalHeight || 1080;
 
+        // 0th IFD (Standard Camera Attributes)
+        const zerothIfd = {};
+        zerothIfd[piexif.ImageIFD.Make] = "SAMSUNG";
+        zerothIfd[piexif.ImageIFD.Model] = "SM-G998B";
+        zerothIfd[piexif.ImageIFD.Orientation] = 1;
+        zerothIfd[piexif.ImageIFD.XResolution] = [72, 1];
+        zerothIfd[piexif.ImageIFD.YResolution] = [72, 1];
+        zerothIfd[piexif.ImageIFD.ResolutionUnit] = 2;
+        zerothIfd[piexif.ImageIFD.Software] = "G998BXXU5EWA6";
+        zerothIfd[piexif.ImageIFD.DateTime] = exifDateStr;
+
+        // Exif IFD (Standard Camera EXIF Header)
         const exifIfd = {};
+        exifIfd[piexif.ExifIFD.ExifVersion] = "0230";
         exifIfd[piexif.ExifIFD.DateTimeOriginal] = exifDateStr;
         exifIfd[piexif.ExifIFD.DateTimeDigitized] = exifDateStr;
+        exifIfd[piexif.ExifIFD.ColorSpace] = 1;
+        exifIfd[piexif.ExifIFD.PixelXDimension] = imgW;
+        exifIfd[piexif.ExifIFD.PixelYDimension] = imgH;
 
+        // GPS IFD (Standard GPS Attributes matching WGS-84)
         const gpsIfd = {};
         gpsIfd[piexif.GPSIFD.GPSVersionID] = [2, 2, 0, 0];
         gpsIfd[piexif.GPSIFD.GPSLatitudeRef] = latRef;
@@ -526,13 +541,15 @@ document.addEventListener('DOMContentLoaded', () => {
             [lonSec, 100]
         ];
         gpsIfd[piexif.GPSIFD.GPSAltitudeRef] = 0;
-        gpsIfd[piexif.GPSIFD.GPSAltitude] = [0, 1];
-        gpsIfd[piexif.GPSIFD.GPSDateStamp] = gpsDateStr;
+        gpsIfd[piexif.GPSIFD.GPSAltitude] = [15, 1];
         gpsIfd[piexif.GPSIFD.GPSTimeStamp] = [
             [parseInt(hours), 1],
             [parseInt(minutes), 1],
             [parseInt(seconds), 1]
         ];
+        gpsIfd[piexif.GPSIFD.GPSMapDatum] = "WGS-84";
+        gpsIfd[piexif.GPSIFD.GPSDateStamp] = gpsDateStr;
+        gpsIfd[piexif.GPSIFD.GPSProcessingMethod] = "CELLID";
 
         const exifObj = {
             "0th": zerothIfd,
@@ -611,10 +628,12 @@ document.addEventListener('DOMContentLoaded', () => {
         cleanName = cleanName.replace(/\.(jpg|jpeg|png|webp|heic|gif)$/i, '');
         cleanName = `${cleanName}.jpg`;
 
-        // Direct Data URL download link (Forces .jpg in Chrome/Edge/Firefox)
+        const blob = dataURItoBlob(dataUrl);
+        const blobUrl = URL.createObjectURL(blob);
+
         const a = document.createElement('a');
         a.style.display = 'none';
-        a.href = dataUrl;
+        a.href = blobUrl;
         a.download = cleanName;
         a.setAttribute('download', cleanName);
 
@@ -625,10 +644,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (a.parentNode) {
                 a.parentNode.removeChild(a);
             }
+            URL.revokeObjectURL(blobUrl);
         }, 1000);
 
         showToast(`¡Imagen guardada como ${cleanName}!`);
     }
+
 
 
 
