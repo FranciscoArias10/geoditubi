@@ -549,7 +549,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         gpsIfd[piexif.GPSIFD.GPSMapDatum] = "WGS-84";
         gpsIfd[piexif.GPSIFD.GPSDateStamp] = gpsDateStr;
-        gpsIfd[piexif.GPSIFD.GPSProcessingMethod] = "CELLID";
+        // GPSProcessingMethod correctly encoded as ASCII UNDEFINED tag
+        gpsIfd[piexif.GPSIFD.GPSProcessingMethod] = [65, 83, 67, 73, 73, 0, 0, 0, 67, 69, 76, 76, 73, 68];
+
 
         const exifObj = {
             "0th": zerothIfd,
